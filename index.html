@@ -57,6 +57,18 @@
   .player{margin-top:14px; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#000}
   .ratio{position:relative; width:100%; padding-top:56.25%}
   .ratio iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+  /* mask covering YouTube's own title bar (which can contain the score) */
+  .titlemask{position:absolute; top:0; left:0; right:0; height:60px; z-index:5; pointer-events:none;
+    background:linear-gradient(180deg, #0a0e14 0%, #0a0e14 70%, rgba(10,14,20,0) 100%);
+    color:var(--text); font-size:13px; font-weight:600; display:flex; align-items:flex-start;
+    gap:8px; padding:10px 14px 0}
+  .titlemask .dot{color:var(--accent)}
+  /* full cover shown on the end screen (blocks "up next" score thumbnails) */
+  .endmask{position:absolute; inset:0; z-index:6; background:#0a0e14; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; text-align:center; padding:20px}
+  .endmask p{margin:0; color:var(--muted); font-size:15px}
+  .endmask button{background:var(--accent); color:#04130b; border:none; border-radius:10px;
+    padding:10px 16px; font-weight:700; cursor:pointer}
   .spoilernote{font-size:12px; color:var(--warn); text-align:center; margin-top:8px}
   .empty{text-align:center; color:var(--muted); padding:40px 0}
   .loader{text-align:center; color:var(--muted); padding:50px 0}
@@ -86,8 +98,8 @@
 
   <footer>
     Schedule data: <a href="https://github.com/openfootball/worldcup.json" target="_blank" rel="noopener">openfootball</a> ·
-    Highlights: official <a href="https://www.youtube.com/channel/UCpcTrCXblq78GZrTUTLWeBw" target="_blank" rel="noopener">FIFA</a> YouTube channel.<br/>
-    Built for night-owls who don't want the result ruined. Heads-up: once a clip ends, YouTube's "up next" panel can show other videos — close it before it does.
+    Highlights: official <a href="https://www.youtube.com/@ITVSport" target="_blank" rel="noopener">ITV Sport</a> &amp; <a href="https://www.youtube.com/@BBCFootball" target="_blank" rel="noopener">BBC Football</a> YouTube channels.<br/>
+    Built for night-owls who don't want the result ruined. The player's title bar and end screen are masked, so the score stays hidden the whole way through.
   </footer>
 </div>
 
@@ -117,8 +129,8 @@ function cardHTML(m){
   const statusLabel = m.status==="finished" ? "Full time" : m.status==="live" ? "Live now" : m.status==="upcoming" ? "Upcoming" : "Scheduled";
   let action = "";
   if(m.videoId){
-    action = `<div class="actions"><button class="btn" onclick="reveal('${m.videoId}', this)">▶ Watch highlights — no score shown</button>
-      <div class="spoilernote">Reveals the match video only. Result is hidden until you press play.</div></div>`;
+    action = `<div class="actions"><button class="btn" data-vid="${m.videoId}" data-label="${m.team1.name} v ${m.team2.name}" onclick="reveal(this)">▶ Watch highlights — score stays hidden</button>
+      <div class="spoilernote">Full broadcaster highlights. We mask the title bar &amp; end screen so the result stays hidden while you watch.</div></div>`;
   } else if(m.status==="finished"){
     action = `<div class="actions"><button class="btn secondary">Highlights not posted yet — check back soon</button></div>`;
   } else if(m.status==="live"){
@@ -135,15 +147,47 @@ function cardHTML(m){
   </div>`;
 }
 
-function reveal(id, btn){
-  const card = btn.closest(".card");
+let ytReadyPromise = null;
+function loadYT(){
+  if(window.YT && window.YT.Player) return Promise.resolve();
+  if(ytReadyPromise) return ytReadyPromise;
+  ytReadyPromise = new Promise(res=>{
+    window.onYouTubeIframeAPIReady = ()=>res();
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+  });
+  return ytReadyPromise;
+}
+let playerSeq = 0;
+function reveal(btn){
+  const id = btn.dataset.vid, label = btn.dataset.label || "Highlights";
   const actions = btn.closest(".actions");
-  const src = "https://www.youtube-nocookie.com/embed/"+id+"?autoplay=1&rel=0&modestbranding=1&color=white";
-  const div = document.createElement("div");
-  div.className = "player";
-  div.innerHTML = `<div class="ratio"><iframe src="${src}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe></div>`;
-  actions.replaceWith(div);
-  card.insertAdjacentHTML("beforeend", `<div class="spoilernote">Tip: when it finishes, hit the back/refresh before the "up next" panel loads.</div>`);
+  const pid = "yt_" + (++playerSeq);
+  const wrap = document.createElement("div");
+  wrap.className = "player";
+  wrap.innerHTML = `<div class="ratio">
+      <div id="${pid}"></div>
+      <div class="titlemask"><span class="dot">▶</span><span>${label} · highlights</span></div>
+      <div class="endmask" style="display:none"><p>Highlights finished — result still hidden.</p><button type="button">▶ Watch again</button></div>
+    </div>`;
+  actions.replaceWith(wrap);
+  const endmask = wrap.querySelector(".endmask");
+  loadYT().then(()=>{
+    const player = new YT.Player(pid, {
+      videoId: id,
+      host: "https://www.youtube-nocookie.com",
+      playerVars: { autoplay:1, controls:1, modestbranding:1, rel:0, playsinline:1, iv_load_policy:3, fs:1 },
+      events: {
+        onReady: e=>{ try{ e.target.playVideo(); }catch(_){ } },
+        onStateChange: e=>{ if(e.data === YT.PlayerState.ENDED) endmask.style.display = "flex"; }
+      }
+    });
+    endmask.querySelector("button").addEventListener("click", ()=>{
+      endmask.style.display = "none";
+      try{ player.seekTo(0); player.playVideo(); }catch(_){ }
+    });
+  });
 }
 
 function applyFilter(list, f){
