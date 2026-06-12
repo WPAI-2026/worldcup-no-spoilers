@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>World Cup 2026 — No Spoilers</title>
+<meta name="description" content="World Cup 2026 highlights with the score hidden. Teams, kick-off time and venue — never the result." />
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#121823; --panel2:#1a2230; --line:#243044;
+    --text:#eef2f8; --muted:#8a99b0; --accent:#39d98a; --accent2:#2fb4ff;
+    --warn:#ffb454; --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #16202e 0%, var(--bg) 60%) fixed;
+    color:var(--text); font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; padding:0 0 60px;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:0 16px}
+  header{padding:28px 0 8px; text-align:center}
+  h1{margin:0; font-size:26px; letter-spacing:.2px}
+  h1 .pill{font-size:12px; vertical-align:middle; background:var(--accent); color:#04130b;
+    padding:3px 8px; border-radius:999px; margin-left:8px; font-weight:700}
+  .sub{color:var(--muted); margin:6px 0 0; font-size:14px}
+  .tabs{display:flex; gap:8px; justify-content:center; margin:18px 0 6px; flex-wrap:wrap}
+  .tab{background:var(--panel); border:1px solid var(--line); color:var(--text);
+    padding:8px 14px; border-radius:999px; cursor:pointer; font-size:14px}
+  .tab.active{background:var(--accent2); border-color:var(--accent2); color:#04121d; font-weight:700}
+  .tz{color:var(--muted); text-align:center; font-size:12px; margin:4px 0 18px}
+  .daygroup{margin:22px 0 6px}
+  .dayhead{font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--muted);
+    margin:0 4px 10px; display:flex; align-items:center; gap:10px}
+  .dayhead::after{content:""; flex:1; height:1px; background:var(--line)}
+  .card{background:linear-gradient(180deg,var(--panel) 0%, var(--panel2) 100%);
+    border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin:10px 0;
+    box-shadow:0 4px 18px rgba(0,0,0,.25)}
+  .meta{display:flex; justify-content:space-between; align-items:center; color:var(--muted);
+    font-size:12.5px; margin-bottom:10px}
+  .grp{background:var(--panel2); border:1px solid var(--line); padding:3px 9px; border-radius:999px}
+  .status{font-weight:700}
+  .status.finished{color:var(--accent)}
+  .status.live{color:#ff5c7a}
+  .status.upcoming{color:var(--accent2)}
+  .teams{display:flex; align-items:center; justify-content:center; gap:14px; margin:6px 0 4px}
+  .team{display:flex; flex-direction:column; align-items:center; gap:6px; width:42%; }
+  .flag{font-size:40px; line-height:1; filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+  .tname{font-weight:600; text-align:center; font-size:15px}
+  .vs{color:var(--muted); font-weight:700; font-size:13px}
+  .foot{display:flex; justify-content:center; gap:16px; color:var(--muted); font-size:13px; margin-top:8px; flex-wrap:wrap}
+  .foot b{color:var(--text); font-weight:600}
+  .actions{margin-top:14px}
+  .btn{width:100%; border:none; border-radius:12px; padding:12px 14px; font-size:15px; font-weight:700;
+    cursor:pointer; background:var(--accent); color:#04130b; display:flex; align-items:center; justify-content:center; gap:8px}
+  .btn.secondary{background:var(--panel2); color:var(--text); border:1px solid var(--line); font-weight:600; cursor:default}
+  .player{margin-top:14px; border-radius:12px; overflow:hidden; border:1px solid var(--line); background:#000}
+  .ratio{position:relative; width:100%; padding-top:56.25%}
+  .ratio iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+  .spoilernote{font-size:12px; color:var(--warn); text-align:center; margin-top:8px}
+  .empty{text-align:center; color:var(--muted); padding:40px 0}
+  .loader{text-align:center; color:var(--muted); padding:50px 0}
+  footer{color:var(--muted); font-size:12px; text-align:center; margin-top:34px; line-height:1.7}
+  footer a{color:var(--accent2)}
+  .banner{background:rgba(57,217,138,.08); border:1px solid rgba(57,217,138,.35); color:#bff3d6;
+    border-radius:12px; padding:10px 14px; font-size:13px; text-align:center; margin:14px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>World Cup 2026 <span class="pill">NO SPOILERS</span></h1>
+    <p class="sub">Last night's highlights, minus the result. We never show the score, the YouTube thumbnail, or the title.</p>
+  </header>
+
+  <div class="banner">⚽ Pick a match, hit play. The score stays hidden until <b>you</b> decide to watch.</div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-f="latest">🌙 Latest highlights</button>
+    <button class="tab" data-f="upcoming">⏱ Upcoming</button>
+    <button class="tab" data-f="all">📅 All matches</button>
+  </div>
+  <div class="tz" id="tz"></div>
+
+  <div id="content"><div class="loader">Loading matches…</div></div>
+
+  <footer>
+    Schedule data: <a href="https://github.com/openfootball/worldcup.json" target="_blank" rel="noopener">openfootball</a> ·
+    Highlights: official <a href="https://www.youtube.com/channel/UCpcTrCXblq78GZrTUTLWeBw" target="_blank" rel="noopener">FIFA</a> YouTube channel.<br/>
+    Built for night-owls who don't want the result ruined. Heads-up: once a clip ends, YouTube's "up next" panel can show other videos — close it before it does.
+  </footer>
+</div>
+
+<script>
+const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "your timezone";
+document.getElementById("tz").textContent = "Times shown in your timezone: " + TZ;
+
+let STATE = { matches: [], filter: "latest" };
+
+function fmtDayKey(d){ return d.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"}); }
+function relDay(d){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const x = new Date(d); x.setHours(0,0,0,0);
+  const diff = Math.round((x - today)/86400000);
+  if(diff===0) return "Today"; if(diff===-1) return "Yesterday"; if(diff===1) return "Tomorrow";
+  return null;
+}
+function fmtTime(d){ return d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); }
+
+function teamHTML(t){
+  return `<div class="team"><span class="flag">${t.flag||"🏳️"}</span><span class="tname">${t.name}</span></div>`;
+}
+
+function cardHTML(m){
+  const ko = m.kickoff ? new Date(m.kickoff) : null;
+  const timeStr = ko ? fmtTime(ko) : "TBC";
+  const statusLabel = m.status==="finished" ? "Full time" : m.status==="live" ? "Live now" : m.status==="upcoming" ? "Upcoming" : "Scheduled";
+  let action = "";
+  if(m.videoId){
+    action = `<div class="actions"><button class="btn" onclick="reveal('${m.videoId}', this)">▶ Watch highlights — no score shown</button>
+      <div class="spoilernote">Reveals the match video only. Result is hidden until you press play.</div></div>`;
+  } else if(m.status==="finished"){
+    action = `<div class="actions"><button class="btn secondary">Highlights not posted yet — check back soon</button></div>`;
+  } else if(m.status==="live"){
+    action = `<div class="actions"><button class="btn secondary">Match in progress — highlights after full time</button></div>`;
+  }
+  return `<div class="card">
+    <div class="meta">
+      <span class="grp">${m.group||m.round||""}</span>
+      <span class="status ${m.status}">${statusLabel}</span>
+    </div>
+    <div class="teams">${teamHTML(m.team1)}<span class="vs">v</span>${teamHTML(m.team2)}</div>
+    <div class="foot"><span>🕒 <b>${timeStr}</b></span>${m.venue?`<span>📍 <b>${m.venue}</b></span>`:""}</div>
+    ${action}
+  </div>`;
+}
+
+function reveal(id, btn){
+  const card = btn.closest(".card");
+  const actions = btn.closest(".actions");
+  const src = "https://www.youtube-nocookie.com/embed/"+id+"?autoplay=1&rel=0&modestbranding=1&color=white";
+  const div = document.createElement("div");
+  div.className = "player";
+  div.innerHTML = `<div class="ratio"><iframe src="${src}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe></div>`;
+  actions.replaceWith(div);
+  card.insertAdjacentHTML("beforeend", `<div class="spoilernote">Tip: when it finishes, hit the back/refresh before the "up next" panel loads.</div>`);
+}
+
+function applyFilter(list, f){
+  if(f==="latest"){
+    // finished matches, most recent first; those with video first
+    return list.filter(m=>m.status==="finished" || m.status==="live")
+      .sort((a,b)=> (b.kickoff||"").localeCompare(a.kickoff||""));
+  }
+  if(f==="upcoming"){
+    return list.filter(m=>m.status==="upcoming" || m.status==="scheduled")
+      .sort((a,b)=> (a.kickoff||"").localeCompare(b.kickoff||""));
+  }
+  return list.slice().sort((a,b)=> (b.kickoff||"").localeCompare(a.kickoff||""));
+}
+
+function render(){
+  const content = document.getElementById("content");
+  const list = applyFilter(STATE.matches, STATE.filter);
+  if(!list.length){
+    content.innerHTML = `<div class="empty">${STATE.filter==="latest"
+      ? "No finished matches yet — once games are played, spoiler-free highlights show up here."
+      : "Nothing to show here yet."}</div>`;
+    return;
+  }
+  // group by local day
+  const groups = new Map();
+  for(const m of list){
+    const d = m.kickoff ? new Date(m.kickoff) : null;
+    const key = d ? fmtDayKey(d) : "Date TBC";
+    if(!groups.has(key)) groups.set(key, {d, items:[]});
+    groups.get(key).items.push(m);
+  }
+  let html = "";
+  for(const [key, g] of groups){
+    const rel = g.d ? relDay(g.d) : null;
+    html += `<div class="daygroup"><div class="dayhead">${rel?rel+" · ":""}${key}</div>${g.items.map(cardHTML).join("")}</div>`;
+  }
+  content.innerHTML = html;
+}
+
+document.getElementById("tabs").addEventListener("click", e=>{
+  const b = e.target.closest(".tab"); if(!b) return;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  b.classList.add("active");
+  STATE.filter = b.dataset.f;
+  render();
+});
+
+fetch("/api/matches").then(r=>r.json()).then(d=>{
+  STATE.matches = d.matches || [];
+  render();
+}).catch(()=>{
+  document.getElementById("content").innerHTML =
+    `<div class="empty">Couldn't load matches right now. Refresh in a moment.</div>`;
+});
+</script>
+</body>
+</html>
